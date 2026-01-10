@@ -38,9 +38,9 @@ class DBHelper {
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                 profile_image_path TEXT
         );`, // profileImage path to wherever its stored on phone
-            `CREATE TABLE IF NOT EXISTS profiles (
+            `CREATE TABLE IF NOT EXISTS contacts (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                personal_profile INTEGER DEFAULT 0,
+                personal_contact INTEGER DEFAULT 0,
                 name TEXT UNIQUE NOT NULL,
                 image TEXT
         );`,
@@ -52,7 +52,7 @@ class DBHelper {
                 FOREIGN KEY (profile_id) REFERENCES profiles(id)
         );`
         ];
-        
+
         try{
             for (const query of queries){
                 await this.db.executeSql(query);
@@ -65,45 +65,71 @@ class DBHelper {
     }
 
     async createNewUser(username, password_hash){
+        const query = `INSERT INTO users (username, password_hash) VALUES (?, ?)`;
+        try{
+            const result = await this.db.executeSql(query, [username, password_hash]);
+        }catch(error){
+            console.log('Theres been an error when creating new user: ', error);
+            throw(error);
+        }
 
     }
     
-    async createProfile(username, image = null){
-        const query = `INSERT INTO profiles (name, image) VALUES (?, ?)`;
+    async createContact(name, image = null){
+        const query = `INSERT INTO contacts (name, image) VALUES (?, ?)`;
 
         try{
-            const result = await this.db.executeSQL(query, [username, image]);
+            const result = await this.db.executeSQL(query, [name, image]);
         } catch(error) {
-            console.log('Error when creating profile: ', error);
+            console.log('Error when creating contact: ', error);
             throw error;
         }
     }
     //delete the profile and related contact fields
-    async deleteProfile(username){
+    async deleteContact(name){
+        const query = `DELETE contacts WHERE (name) VALUES(?)`;
+        
+        try{
+            const result = await this.db.executeSql(query, [name]);
+        }catch(error){
+            console.log('There was an error with deleting the contact: ', error);
+            throw error;
+        }
 
     }
 
-    async updateProfile(username){
-
+    async updateContact(username){
+        //need to grab all relevent contact fields and update them by calling addContactField
+        const query = ``;
     }
 
-    async getProfile(username){
-
+    async getContact(username){
+        const query = ``;
     }
 
     async addContactField(profileID, field_type, field_value){
-
+        const query = ``;
     }
 
     async editContactField(profileID, field_type, field_value){
+        const query = ``;
 
     }
 
     async getContactFields(profileID, field_type = null){
+        const query = ``;
 
     }
 
-    async deleteContactField(){
+    async deleteContactField(to_delete_field){
+        const query = `DELETE contacts WHERE (field_type) VALUES (?)`;
+        try{
+            const result = await this.db.executeSql(query, [to_delete_field])
+        }catch(error){
+            console.log('Error deleting contact field: ', error);
+            throw(error);
+        }
+        
 
     }
 
