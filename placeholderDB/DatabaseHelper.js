@@ -98,26 +98,71 @@ class DBHelper {
 
     }
 
-    async updateContact(username){
+    async updateContact(name, newName, image=null){
         //need to grab all relevent contact fields and update them by calling addContactField
-        const query = ``;
+        const query = `UPDATE contacts SET (name, image) VALUES (?, ?) WHERE (name) VALUES (?)`;
+        try{
+            const result = await this.db.executeSql(query, [newName, image, name])
+        }catch(error){
+            console.log('Error updating contact: ', error);
+            throw(error);
+        }
     }
 
-    async getContact(username){
-        const query = ``;
+    async getContact(name){
+        const query = `SELECT FROM contacts WHERE (name) VALUES (?)`;
+        try{
+            const result = await this.db.executeSql(query, [name]);
+            return result;
+        }catch(error){
+            console.log('Error when grabbing contact: ', error);
+            throw(error);
+        }
+
     }
 
     async addContactField(profileID, field_type, field_value){
-        const query = ``;
+        const query = `INSERT INTO contact_fields (profileID, field_type, field_value) VALUES (?, ?, ?)`;
+        try{
+            const result = await this.db.executeSql(query, [profileID, field_type, field_value]);
+        } catch(error){
+            console.log('Error when adding the contact field: ', error);
+            throw(error);
+        }
     }
 
     async editContactField(profileID, field_type, field_value){
-        const query = ``;
+        const query = `UPDATE contact_fields SET (field_value) VALUES (?) WHERE (profileID, field_type) VALUES (?, ?)`;
+        try{
+            const result = await this.db.executeSql(query, [field_value, profileID, field_type])
+        }catch(error){
+            console.log('Error when editing contact fields: ', error);
+            throw(error);
+        }
 
     }
 
     async getContactFields(profileID, field_type = null){
-        const query = ``;
+        if (field_type){
+            const query = `SELECT field_value FROM contact_fields WHERE (profileID, field_type) VALUES (?, ?)`;
+            try{
+                const result = await this.db.executeSql(query, [profileID, field_type])
+                return result;
+            } catch(error){
+                console.log('Error getting the contact field: ', error);
+                throw(error);
+            }
+        }else{
+            const query = `SELECT field_type, field_value FROM contact_fields WHERE (profileID) VALUES (?)`;
+            try{
+                const result = await this.db.executeSql(query, [profileID]);
+                return result;
+            } catch(error){
+                console.log('Error trying to retrieve contact fields: ', error);
+                throw(error);
+            }
+        }
+        
 
     }
 
