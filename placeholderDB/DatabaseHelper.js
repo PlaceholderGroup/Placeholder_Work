@@ -34,7 +34,6 @@ class DBHelper {
             `CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
-                password_hash TEXT NOT NULL,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                 profile_image_path TEXT
         );`, // profileImage path to wherever its stored on phone
@@ -42,6 +41,7 @@ class DBHelper {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 personal_contact INTEGER DEFAULT 0,
                 name TEXT UNIQUE NOT NULL,
+                existing_contact_path TEXT,
                 image TEXT
         );`,
             `CREATE TABLE IF NOT EXISTS contact_fields (
@@ -49,7 +49,7 @@ class DBHelper {
                 contact_id INTEGER NOT NULL,
                 field_type TEXT NOT NULL,
                 field_value TEXT NOT NULL,
-                FOREIGN KEY (contact_id) REFERENCES contacts(id)
+                FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE
         );`
         ];
 
@@ -64,10 +64,11 @@ class DBHelper {
 
     }
 
-    async createNewUser(username, password_hash){
-        const query = `INSERT INTO users (username, password_hash) VALUES (?, ?)`;
+    async createNewUser(username){
+        const query = `INSERT INTO users (username) VALUES (?)`;
         try{
-            const result = await this.db.executeSql(query, [username, password_hash]);
+            const result = await this.db.executeSql(query, [username]);
+            return result[0].insertId;
         }catch(error){
             console.log('Theres been an error when creating new user: ', error);
             throw(error);
@@ -75,11 +76,12 @@ class DBHelper {
 
     }
     
-    async createContact(name, image = null){
-        const query = `INSERT INTO contacts (name, image) VALUES (?, ?)`;
+    async createContact(name, image = null, existing_contact_path = null){
+        const query = `INSERT INTO contacts (name, image, existing_contact_path) VALUES (?, ?, ?)`;
 
         try{
-            const result = await this.db.executeSql(query, [name, image]);
+            const result = await this.db.executeSql(query, [name, image, existing_contact_path]);
+            return result[0].insertId;
         } catch(error) {
             console.log('Error when creating contact: ', error);
             throw error;
@@ -90,6 +92,7 @@ class DBHelper {
         const query = `DELETE FROM contacts WHERE name = ?`;
         try{
             const result = await this.db.executeSql(query, [name]);
+            return result[0].rowsAffected;
         }catch(error){
             console.log('There was an error with deleting the contact: ', error);
             throw error;
@@ -97,11 +100,13 @@ class DBHelper {
 
     }
 
-    async updateContact(name, newName, image=null){
+    async updateContact(name, newName, image=null, existing_contact_path=null){
         //need to grab all relevent contact fields and update them by calling addContactField
-        const query = `UPDATE contacts SET name = ?, image = ? WHERE name = ?`;
+        const query = `UPDATE contacts SET name = ?, image = ?, existing_contact_path = ? WHERE name = ?`;
         try{
-            const result = await this.db.executeSql(query, [newName, image, name])
+            const result = await this.db.executeSql(query, [newName, image, existing_contact_path, name])
+            console.log('Rows affected: ', result[0].rowsAffected)
+            return result[0].rowsAffected
         }catch(error){
             console.log('Error updating contact: ', error);
             throw(error);
@@ -112,7 +117,10 @@ class DBHelper {
         const query = `SELECT * FROM contacts WHERE name = ?`;
         try{
             const result = await this.db.executeSql(query, [name]);
-            return result;
+            if (result[0].rows.length > 0){
+                return result[0].rows.item(0);
+            };
+            return null;
         }catch(error){
             console.log('Error when grabbing contact: ', error);
             throw(error);
@@ -124,6 +132,7 @@ class DBHelper {
         const query = `INSERT INTO contact_fields (contact_id, field_type, field_value) VALUES (?, ?, ?)`;
         try{
             const result = await this.db.executeSql(query, [contact_id, field_type, field_value]);
+            return result[0].insertId;
         } catch(error){
             console.log('Error when adding the contact field: ', error);
             throw(error);
@@ -134,6 +143,8 @@ class DBHelper {
         const query = `UPDATE contact_fields SET field_value = ? WHERE contact_id = ? AND field_type = ?`;
         try{
             const result = await this.db.executeSql(query, [field_value, contact_id, field_type])
+            console.log('Rows affected: ', result[0].rowsAffected)
+            return result[0].rowsAffected;
         }catch(error){
             console.log('Error when editing contact fields: ', error);
             throw(error);
@@ -146,7 +157,10 @@ class DBHelper {
             const query = `SELECT field_value FROM contact_fields WHERE contact_id = ? AND field_type = ?`;
             try{
                 const result = await this.db.executeSql(query, [contact_id, field_type])
-                return result;
+                if (result[0].rows.length > 0){
+                return result[0].rows.item(0);
+                };
+                return null;
             } catch(error){
                 console.log('Error getting the contact field: ', error);
                 throw(error);
@@ -155,7 +169,12 @@ class DBHelper {
             const query = `SELECT field_type, field_value FROM contact_fields WHERE contact_id = ?`;
             try{
                 const result = await this.db.executeSql(query, [contact_id]);
-                return result;
+                const fields = [];
+                for(let i = 0; i < result[0].rows.length; i++){
+                    fields.push(result[0].rows.item(i));
+                }
+                
+            return fields;
             } catch(error){
                 console.log('Error trying to retrieve contact fields: ', error);
                 throw(error);
@@ -169,6 +188,8 @@ class DBHelper {
         const query = `DELETE FROM contact_fields WHERE contact_id = ? AND field_type = ?`;
         try{
             const result = await this.db.executeSql(query, [contact_id, to_delete_field])
+            console.log('Rows affected: ', result[0].rowsAffected);
+            return result[0].rowsAffected;
         }catch(error){
             console.log('Error deleting contact field: ', error);
             throw(error);
