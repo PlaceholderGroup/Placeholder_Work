@@ -64,6 +64,8 @@ class DBHelper {
 
     }
 
+//CREATE:
+
     async createNewUser(username){
         const query = `INSERT INTO users (username) VALUES (?)`;
         try{
@@ -87,49 +89,10 @@ class DBHelper {
             throw error;
         }
     }
-    //delete the profile and related contact fields
-    async deleteContact(name){
-        const query = `DELETE FROM contacts WHERE name = ?`;
-        try{
-            const result = await this.db.executeSql(query, [name]);
-            return result[0].rowsAffected;
-        }catch(error){
-            console.log('There was an error with deleting the contact: ', error);
-            throw error;
-        }
 
-    }
-
-    async updateContact(name, newName, image=null, existing_contact_path=null){
-        //need to grab all relevent contact fields and update them by calling addContactField
-        const query = `UPDATE contacts SET name = ?, image = ?, existing_contact_path = ? WHERE name = ?`;
-        try{
-            const result = await this.db.executeSql(query, [newName, image, existing_contact_path, name])
-            console.log('Rows affected: ', result[0].rowsAffected)
-            return result[0].rowsAffected
-        }catch(error){
-            console.log('Error updating contact: ', error);
-            throw(error);
-        }
-    }
-
-    async getContact(name){
-        const query = `SELECT * FROM contacts WHERE name = ?`;
-        try{
-            const result = await this.db.executeSql(query, [name]);
-            if (result[0].rows.length > 0){
-                return result[0].rows.item(0);
-            };
-            return null;
-        }catch(error){
-            console.log('Error when grabbing contact: ', error);
-            throw(error);
-        }
-
-    }
-
-    async addContactField(contact_id, field_type, field_value){
+    async createContactField(contact_id, field_type, field_value){
         const query = `INSERT INTO contact_fields (contact_id, field_type, field_value) VALUES (?, ?, ?)`;
+
         try{
             const result = await this.db.executeSql(query, [contact_id, field_type, field_value]);
             return result[0].insertId;
@@ -139,14 +102,19 @@ class DBHelper {
         }
     }
 
-    async editContactField(contact_id, field_type, field_value){
-        const query = `UPDATE contact_fields SET field_value = ? WHERE contact_id = ? AND field_type = ?`;
+
+//READ:
+
+     async getContact(name){
+        const query = `SELECT * FROM contacts WHERE name = ?`;
         try{
-            const result = await this.db.executeSql(query, [field_value, contact_id, field_type])
-            console.log('Rows affected: ', result[0].rowsAffected)
-            return result[0].rowsAffected;
+            const result = await this.db.executeSql(query, [name]);
+            if (result[0].rows.length > 0){
+                return result[0].rows.item(0);
+            };
+            return null;
         }catch(error){
-            console.log('Error when editing contact fields: ', error);
+            console.log('Error when grabbing contact: ', error);
             throw(error);
         }
 
@@ -181,6 +149,52 @@ class DBHelper {
             }
         }
         
+
+    }
+    
+
+//UPDATE:
+
+
+
+    async updateContact(name, newName, image=null, existing_contact_path=null){
+        //need to grab all relevent contact fields and update them by calling addContactField
+        const query = `UPDATE contacts SET name = ?, image = ?, existing_contact_path = ? WHERE name = ?`;
+        try{
+            const result = await this.db.executeSql(query, [newName, image, existing_contact_path, name])
+            console.log('Rows affected: ', result[0].rowsAffected)
+            return result[0].rowsAffected
+        }catch(error){
+            console.log('Error updating contact: ', error);
+            throw(error);
+        }
+    }
+
+   
+    async updateContactField(contact_id, field_type, field_value){
+        const query = `UPDATE contact_fields SET field_value = ? WHERE contact_id = ? AND field_type = ?`;
+        try{
+            const result = await this.db.executeSql(query, [field_value, contact_id, field_type])
+            console.log('Rows affected: ', result[0].rowsAffected)
+            return result[0].rowsAffected;
+        }catch(error){
+            console.log('Error when editing contact fields: ', error);
+            throw(error);
+        }
+
+    }
+
+
+//DELTE:
+    async deleteContact(name){
+        const query = `DELETE FROM contacts WHERE name = ?`;
+        try{
+            const result = await this.db.executeSql(query, [name]);
+            return result[0].rowsAffected;
+        }catch(error){
+            console.log('There was an error with deleting the contact: ', error);
+            throw error;
+        }
 
     }
 
