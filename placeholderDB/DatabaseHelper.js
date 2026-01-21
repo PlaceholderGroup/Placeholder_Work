@@ -120,6 +120,7 @@ class DBHelper {
 
     }
 
+    //make field_type an array so you can grab any number of field types at one time
     async getContactFields(contact_id, field_type = null){
         if (field_type){
             const query = `SELECT field_value FROM contact_fields WHERE contact_id = ? AND field_type = ?`;
