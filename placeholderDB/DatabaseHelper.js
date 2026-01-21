@@ -20,7 +20,7 @@ class DBHelper {
         console.log('Database opened successfully!');
 
         // create necessary tables
-        await this.createTables(); //need to make this still
+        await this.createTables(); 
 
         } catch(error){
         console.log('Issue with opening the database.');
@@ -159,7 +159,7 @@ class DBHelper {
 
 
     async updateContact(name, newName, image=null, existing_contact_path=null){
-        //need to grab all relevent contact fields and update them by calling addContactField
+        
         const query = `UPDATE contacts SET name = ?, image = ?, existing_contact_path = ? WHERE name = ?`;
         try{
             const result = await this.db.executeSql(query, [newName, image, existing_contact_path, name])
